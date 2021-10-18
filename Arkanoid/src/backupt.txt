@@ -1,0 +1,366 @@
+package com.example.game;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.awt.font.TextAttribute;
+import java.awt.image.ImageObserver;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.text.AttributedCharacterIterator;
+import java.util.*;
+
+public class Pong {
+    //Game Elements
+    //map
+    private static int HEIGHT;
+    private static int WIDTH;
+    private static String map="";
+    private static char[][] mapDrawing;
+
+    //map objects
+    private static char paddle = 'T';
+    private static char paddleLeft = '<';
+    private static char paddleRight = '>';
+    private static char wall = '#';
+    private static char ball = 'O';
+    private static char space = '_';
+    private static char brick = 'u';
+
+    //paddle data
+    private static int paddleX =WIDTH/2;
+    private static int paddleY =HEIGHT-2;
+
+    //ball data
+    private static int ballX = WIDTH/2;
+    private static int ballY = paddleY-1;
+    private static int ballXDirection =0;
+    private static int ballYDirection =0;
+    private static boolean isOnPaddle=true;
+
+    //Game info
+    private static int amountOfBricks =0;
+
+    //UI
+    static JFrame frame;
+
+    //game logic variables
+    //frame interval
+    //game conditions
+
+    public static boolean isRunning = true;
+    public static void main(String[] args) throws InterruptedException, FileNotFoundException {
+        //file reader for levels
+        File file = new File("src/level_1.txt");
+        Scanner fileReader = new Scanner(file);
+        ArrayList<String>lines = new ArrayList<String>();
+        while (fileReader.hasNextLine()) {
+            lines.add(fileReader.nextLine());
+            for(char a:lines.get(HEIGHT).toCharArray())
+            {
+                if(a == brick)
+                    amountOfBricks++;
+            }
+
+            HEIGHT++;
+        }
+        fileReader.close();
+        WIDTH = lines.get(0).length();
+        mapDrawing = new char[HEIGHT][WIDTH];
+        for(int i=0;i<HEIGHT;i++)
+        {
+            mapDrawing[i]=lines.get(i).toCharArray();
+        }
+
+        //paddle initialize
+        paddleX =WIDTH/2;
+        paddleY =HEIGHT-2;
+
+        //ball initialize
+        ballX = WIDTH/2;
+        ballY = paddleY-1;
+
+        JPanel gamePanel = new JPanel();
+
+        gamePanel.setLayout(new BoxLayout(gamePanel, BoxLayout.PAGE_AXIS));
+        JLabel gameLabel = new JLabel();
+        gameLabel.setFocusable(false);
+        gameLabel.setFont(new Font("Serif", Font.PLAIN, 20));
+        gameLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        //gameLabel.setPreferredSize(new Dimension(1000, 200));
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                //initialise UI variables
+                frame = new JFrame("Panel");
+                JPanel panel = new JPanel();
+                //frame settings
+                frame.add(panel, BorderLayout.NORTH);
+                frame.add(gamePanel, BorderLayout.CENTER);
+                frame.setSize(1200, 600);
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                frame.setLocationRelativeTo(null);
+                frame.setVisible(true);
+                frame.setResizable(false);
+
+                //panel settings
+                panel.setBackground(Color.CYAN);
+                panel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 5));
+                Button button = new Button("Buttone");
+                button.setFocusable(false);
+                panel.setPreferredSize(new Dimension(200, 50));
+
+                panel.add(button);
+                JLabel label = new JLabel();
+                label.setText("<html> My text </html>");
+                label.setFont(new Font(Font.DIALOG, Font.BOLD, 15));
+                panel.add(label);
+
+                frame.addMouseWheelListener(new MouseWheelListener() {
+                    @Override
+                    public void mouseWheelMoved(MouseWheelEvent e) {
+                        int keyCode = (int)e.getPreciseWheelRotation();
+                        switch (keyCode)
+                        {
+                            case 1:
+                                if(paddleX !=WIDTH-3)
+                                    paddleX++;
+
+                                if(isOnPaddle)
+                                    ballX=paddleX;
+                                break;
+                            case -1:
+                                if(paddleX !=2)
+                                    paddleX--;
+
+                                if(isOnPaddle)
+                                    ballX=paddleX;
+                                break;
+                        }
+                    }
+                });
+                frame.addKeyListener(new KeyListener() {
+                    boolean trigger=true;
+                    @Override
+                    public void keyTyped(KeyEvent e) {}
+                    @Override
+                    public void keyPressed(KeyEvent e) {
+                        int keyCode = e.getKeyCode();
+
+                        //key tap logic
+                        //refactor this to use functions for gamelogic/paddle/ball classes
+                        if(trigger)
+                        {
+                            trigger = false;
+                            switch (keyCode) {
+                                case KeyEvent.VK_D:
+                                    if(paddleX !=WIDTH-3)
+                                        paddleX++;
+
+                                    if(isOnPaddle)
+                                        ballX=paddleX;
+
+                                    break;
+                                case KeyEvent.VK_A:
+                                    if(paddleX !=2)
+                                        paddleX--;
+
+                                    if(isOnPaddle)
+                                        ballX=paddleX;
+                                    break;
+
+                                case KeyEvent.VK_SPACE:
+                                    isOnPaddle=false;
+                                    ballYDirection=-1;
+                                    break;
+                                case KeyEvent.VK_ESCAPE:
+                                    isRunning=false;
+                                    break;
+
+                            }
+
+                        }
+                    }
+
+                    @Override
+                    public void keyReleased(KeyEvent e) {
+                        int keyCode = e.getKeyCode();
+                        trigger=true;
+                    }
+                });
+            }
+
+        });
+
+        JLabel []gameLabels = new JLabel[HEIGHT];
+        for(int i=0;i<HEIGHT;i++)
+        {
+            gameLabels[i] = new JLabel("", SwingConstants.RIGHT);
+            gameLabels[i].setFont(new Font("Consolas",Font.PLAIN, 15));
+            gamePanel.add(gameLabels[i]);
+        }
+        JLabel emptyLabel = new JLabel();
+        JLabel scoreLabel = new JLabel("Bricks left: " + amountOfBricks);
+        gamePanel.add(emptyLabel);
+        gamePanel.add(scoreLabel);
+        //GAME LOOP
+        while(isRunning)
+        {
+            char [][]temp = new char[HEIGHT][];
+            for(int i=0;i<HEIGHT;i++)
+            {
+                temp[i] = Arrays.copyOf(mapDrawing[i],WIDTH);
+            }
+            //redraw map
+            for(int i=0;i<HEIGHT; i++)
+            {
+
+                for(int j=0;j<WIDTH;j++)
+                {
+                    if(ballX ==j && ballY ==i)
+                    {
+                        temp[i][j]=ball;
+                        continue;
+                    }
+
+                    if(paddleX==j&&paddleY==i)
+                    {
+                        temp[i][j]=paddle;
+                        continue;
+                    }
+                    if(paddleX-1==j&&paddleY==i)
+                    {
+                        temp[i][j]=paddleLeft;
+                        continue;
+                    }
+                    if(paddleX+1==j&&paddleY==i)
+                    {
+                        temp[i][j]=paddleRight;
+                        continue;
+                    }
+
+                }
+                map = new String(temp[i]);
+                gameLabels[i].setText(map);
+            }
+
+
+            gameLabel.setText(map);
+
+            //ball logic
+            if(!isOnPaddle)
+            {
+                char incomingCharacter = temp[ballY+ballYDirection][ballX+ballXDirection];
+                System.out.println(ballXDirection + " " + ballYDirection);
+                System.out.println(incomingCharacter);
+                if(incomingCharacter != space)
+                {
+                    if(incomingCharacter == paddleLeft)
+                    {
+                        ballYDirection*=-1;
+                        switch (ballXDirection){
+                            case 0:
+                                ballXDirection=-1;
+                                break;
+                            case 1:
+                                ballXDirection=0;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    else if(incomingCharacter == paddleRight)
+                    {
+
+                        ballYDirection*=-1;
+                        switch (ballXDirection){
+                            case 0:
+                                ballXDirection=1;
+                                break;
+                            case 1:
+                                ballXDirection=0;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        char diagonalLetter = temp[ballY+ballYDirection][ballX+ballXDirection];
+                        char upDownLetter = temp[ballY+ballYDirection][ballX];
+                        char leftRightLetter = temp[ballY][ballX+ballXDirection];
+                        System.out.println(upDownLetter + " " + leftRightLetter);
+                        if(upDownLetter != space && leftRightLetter != space)
+                        {
+                            if(upDownLetter == brick)
+                            {
+                                mapDrawing[ballY+ballYDirection][ballX] = space;
+                                amountOfBricks--;
+                                scoreLabel.setText("Bricks left: " + amountOfBricks);
+                            }
+                            if(leftRightLetter == brick)
+                            {
+                                mapDrawing[ballY][ballX+ballXDirection] = space;
+                                amountOfBricks--;
+                                scoreLabel.setText("Bricks left: " + amountOfBricks);
+                            }
+                            ballXDirection*=-1;
+                            ballYDirection*=-1;
+                        }
+                        else if(upDownLetter != space)
+                        {
+                            if(upDownLetter == brick)
+                            {
+                                mapDrawing[ballY+ballYDirection][ballX] = space;
+                                amountOfBricks--;
+                                scoreLabel.setText("Bricks left: " + amountOfBricks);
+                            }
+                            ballYDirection *= -1;
+                        }
+                        else if(diagonalLetter != space) {
+                            if (diagonalLetter == brick)
+                            {
+                                mapDrawing[ballY+ballYDirection][ballX+ballXDirection] = space;
+                                amountOfBricks--;
+                                scoreLabel.setText("Bricks left: " + amountOfBricks);
+                            }
+                            ballXDirection *= -1;
+
+                        }
+                        else {
+                            if (leftRightLetter == brick)
+                            {
+                                mapDrawing[ballY][ballX + ballXDirection] = space;
+                                amountOfBricks--;
+                                scoreLabel.setText("Bricks left: " + amountOfBricks);
+                            }
+                            ballXDirection *= -1;
+                        }
+
+                    }
+
+                }
+                //all other collision
+
+                if(ballY==HEIGHT-2)
+                    break;
+
+                ballY+=ballYDirection;
+                ballX+=ballXDirection;
+
+            }
+
+
+            Thread.sleep(100);
+
+            if(amountOfBricks==0)
+                isRunning=false;
+        }
+
+        gameLabel.setText("END");
+        Thread.sleep(800);
+        gameLabel.setText("SAD");
+    }
+}

@@ -1,0 +1,155 @@
+ gameFrame.add(gamePanel);
+        while(true)
+        {
+            //Map setup
+            Map map = new Map('#','_','u',"src/test.txt");
+
+            gamePanel.setMap(map);
+
+            gameLabels = new JLabel[map.getHeight()];
+            for(int i=0;i< map.getHeight();i++)
+            {
+                gameLabels[i] = new JLabel("", SwingConstants.RIGHT);
+                gameLabels[i].setFont(new Font("Consolas",Font.PLAIN, 15));
+                gameLabels[i].setForeground(Color.white);
+                gamePanel.add(gameLabels[i]);
+            }
+            //Paddle setup
+            Paddle paddle = new Paddle(map.getWidth()/2, map.getHeight()-2,'T','<','>');
+            gamePanel.setPaddle(paddle);
+            //Ball setup
+            Ball ball = new Ball(paddle.getX(), paddle.getY()-1,0,0,true,'O');
+            gamePanel.setBall(ball);
+
+            while(true)
+            {
+                char [][]temp = new char[map.getHeight()][];
+                for(int i=0;i<map.getHeight();i++)
+                {
+                    temp[i] = Arrays.copyOf(map.getMapDrawingLine(i),map.getWidth());
+                }
+                //redraw map
+                for(int i=0;i<map.getHeight(); i++)
+                {
+
+                    for(int j=0;j<map.getWidth();j++)
+                    {
+                        if(ball.getX() ==j && ball.getY() ==i)
+                        {
+                            temp[i][j]=ball.getCharacter();
+                            continue;
+                        }
+
+                        if(paddle.getX()==j&&paddle.getY()==i)
+                        {
+                            temp[i][j]=paddle.getMiddleCharacter();
+                            continue;
+                        }
+                        if(paddle.getX()-1==j&&paddle.getY()==i)
+                        {
+                            temp[i][j]=paddle.getLeftCharacter();
+                            continue;
+                        }
+                        if(paddle.getX()+1==j&& paddle.getY()==i)
+                        {
+                            temp[i][j]= paddle.getRightCharacter();
+                            continue;
+                        }
+
+                    }
+
+                    gameLabels[i].setText(new String(temp[i]));
+                }
+
+                if(!ball.isOnPaddle())
+                {
+                    char incomingCharacter = temp[ball.getYVector()][ball.getXVector()];
+                    if(incomingCharacter != map.getSpace())
+                    {
+                        if(incomingCharacter == paddle.getLeftCharacter())
+                        {
+                            ball.setyDirection(ball.getyDirection()*-1);
+                            switch (ball.getxDirection()){
+                                case 0:
+                                    ball.setxDirection(-1);
+                                    break;
+                                case 1:
+                                    ball.setxDirection(0);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        else if(incomingCharacter == paddle.getRightCharacter())
+                        {
+                            ball.setyDirection(ball.getyDirection()*-1);
+                            switch (ball.getxDirection()){
+                                case 0:
+                                    ball.setxDirection(1);
+                                    break;
+                                case 1:
+                                    ball.setxDirection(0);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            char diagonalLetter = temp[ball.getYVector()][ball.getXVector()];
+                            char verticalLetter = temp[ball.getYVector()][ball.getX()];
+                            char horizontalLetter = temp[ball.getY()][ball.getXVector()];
+
+
+                            if(verticalLetter != map.getSpace() && horizontalLetter != map.getSpace())
+                            {
+                                if(verticalLetter == map.getBrick())
+                                {
+                                    map.setElement(ball.getYVector(),ball.getX(),map.getSpace());
+                                    map.setAmountOfBricks(map.getAmountOfBricks()-1);
+                                    scoreLabel.setText("Bricks left: " + map.getAmountOfBricks());
+                                }
+                                if(horizontalLetter == map.getBrick())
+                                {
+                                    map.setElement(ball.getY(),ball.getXVector(),map.getSpace());
+                                    map.setAmountOfBricks(map.getAmountOfBricks()-1);
+                                    scoreLabel.setText("Bricks left: " + map.getAmountOfBricks());
+                                }
+                                ball.setxDirection(ball.getxDirection()*-1);
+                                ball.setyDirection(ball.getyDirection()*-1);
+                            }
+                            else if(verticalLetter != map.getSpace())
+                            {
+                                if(verticalLetter == map.getBrick())
+                                {
+                                    map.setElement(ball.getYVector(),ball.getX(),map.getSpace());
+                                    map.setAmountOfBricks(map.getAmountOfBricks()-1);
+                                    scoreLabel.setText("Bricks left: " + map.getAmountOfBricks());
+                                }
+                                ball.setyDirection(ball.getyDirection()*-1);
+                            }
+                            else if(diagonalLetter != map.getSpace()) {
+                                if (diagonalLetter == map.getBrick())
+                                {
+                                    map.setElement(ball.getYVector(), ball.getXVector(), map.getSpace());
+                                    map.setAmountOfBricks(map.getAmountOfBricks()-1);
+                                    scoreLabel.setText("Bricks left: " + map.getAmountOfBricks());
+                                }
+                                ball.setxDirection(ball.getxDirection()*-1);
+                            }
+                        }
+
+                    }
+                }
+                Thread.sleep(100);
+                ball.setY(ball.getYVector());
+                ball.setX(ball.getXVector());
+                if(map.getAmountOfBricks() ==0)
+                    break;
+            }
+
+            for(int i=0;i< map.getHeight();i++)
+            {
+                gamePanel.remove(gameLabels[i]);
+            }
+        }
