@@ -13,8 +13,7 @@ public class LevelPanel extends JPanel{
             levelButtons = new ArrayList<LevelButton>();
             CreateLevelButtons();
         }
-        private void CreateLevelButtons()
-        {
+        private void CreateLevelButtons() {
             levelButtons.add(new LevelButton("src/level_1.txt","Level 1"));
             levelButtons.add(new LevelButton("src/level_2.txt","Level 2"));
             levelButtons.add(new LevelButton("src/level_3.txt","Level 3"));
@@ -23,15 +22,13 @@ public class LevelPanel extends JPanel{
             levelButtons.add(new LevelButton("src/level_6.txt","Level 6"));
             CreateLevelPanel();
         }
-        private void CreateLevelPanel()
-        {
+        private void CreateLevelPanel() {
             for(LevelButton levelButton: levelButtons)
             {
                 this.add(levelButton);
             }
         }
-        public void ResetAllButtons()
-        {
+        public void ResetAllButtons() {
             for(LevelButton button:levelButtons)
                 button.setWasClicked(false);
         }

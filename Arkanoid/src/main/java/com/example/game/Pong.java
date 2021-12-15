@@ -8,6 +8,13 @@ import java.util.*;
 public class Pong {
 
     public static void main(String[] args) throws InterruptedException, FileNotFoundException {
-        GameFrame gameFrame = new GameFrame();
+        Game game = Game.getInstance();
+        while(true)
+        {
+            game.loadMainMenu();
+            game.loadLevel();
+            game.runGame();
+            game.endGame();
+        }
     }
 }
