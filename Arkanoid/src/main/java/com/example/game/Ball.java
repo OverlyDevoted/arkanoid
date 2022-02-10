@@ -20,6 +20,19 @@ public class Ball {
         this.isOnPaddle = isOnPaddle;
         this.character = icon;
     }
+    public void resetBall(int x, int y) {
+        setOnPaddle(true);
+        setxDirection(0);
+        setyDirection(0);
+        setX(x);
+        setY(y);
+    }
+    public void moveBall(int x, int y) {
+        yDirection = y;
+        xDirection = x;
+        this.y = getYVector();
+        this.x = getXVector();
+    }
 
     public int getX() {
         return x;
@@ -75,7 +88,6 @@ public class Ball {
     }
 
     public int getYVector(){
-        int temp = y + yDirection;
-        return temp;
+        return y + yDirection;
     }
 }
